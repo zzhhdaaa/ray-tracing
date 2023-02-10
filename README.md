@@ -1,6 +1,15 @@
-# Walnut App Template
+# Ray Tracing Renderer
 
-This is a simple app template for [Walnut](https://github.com/TheCherno/Walnut) - unlike the example within the Walnut repository, this keeps Walnut as an external submodule and is much more sensible for actually building applications. See the [Walnut](https://github.com/TheCherno/Walnut) repository for more details.
+This is a repo for recording my self-study path of creating a ray-tracing renderer from scratch. 
 
 ## Getting Started
-Once you've cloned, you can customize the `premake5.lua` and `WalnutApp/premake5.lua` files to your liking (eg. change the name from "WalnutApp" to something else).  Once you're happy, run `scripts/Setup.bat` to generate Visual Studio 2022 solution/project files. Your app is located in the `WalnutApp/` directory, which some basic example code to get you going in `WalnutApp/src/WalnutApp.cpp`. I recommend modifying that WalnutApp project to create your own application, as everything should be setup and ready to go.
+Once you've cloned, the Visual Studio 2022 solution file is in the root named `RayTracing.sln`. And all source code of the renderer is under `RayTracing/src/`. 
+
+## Reference
+For reference, I am following the book series ***Ray Tracing in One Weekend, The Next Week, and The Rest of Your Life*** on GitHub as well as the video series ***Ray Tracing, The Cherno*** on YouTube. Many thanks to these authors, I have already learned a lot even though I just started.
+###### Book Series [Ray Tracing in One Weekend, The Next Week, and The Rest of Your Life](https://raytracing.github.io/)
+###### Video Series [Ray Tracing, from The Cherno](https://youtube.com/playlist?list=PLlrATfBNZ98edc5GshdBtREv5asFW3yXl)
+
+
+## GUI Template Usage
+Although called "from scratch", I use an app template from `TheCherno/WalnutAppTemplate.git` to help me handle GUI and visualize the render output interactively. This helps me get rid of things that are not so important at this point and focus on the core parts. 
