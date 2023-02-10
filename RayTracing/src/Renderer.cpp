@@ -6,6 +6,12 @@
 
 namespace Utils
 {
+	struct QuadraticResult
+	{
+		float Discriminant;
+		float T[2];
+	};
+
 	static uint32_t ConvertToRGBA(const glm::vec4& color)
 	{
 		uint8_t r = (uint8_t)(color.r * 255.0f);
@@ -14,6 +20,32 @@ namespace Utils
 		uint8_t a = (uint8_t)(color.a * 255.0f);
 
 		return 0x00000000 | a << 24 | b << 16 | g << 8 | r;
+	}
+
+	static QuadraticResult SolveQuadratic(const Ray& ray, const Sphere& sphere)
+	{
+		QuadraticResult result;
+
+		// sphere
+		glm::vec3 sphereOrigin = sphere.Origin;
+		float sphereRadius = sphere.Radius;
+
+		// calculating if the camera ray intersects with the sphere
+		float a = glm::dot(ray.Direction, ray.Direction);
+		float b = 2.0f * (glm::dot(ray.Origin, ray.Direction) - glm::dot(ray.Direction, sphereOrigin));
+		float c = glm::dot(ray.Origin, ray.Origin) + glm::dot(sphereOrigin, sphereOrigin) - 2.0f * glm::dot(ray.Origin, sphereOrigin) - sphereRadius * sphereRadius;
+
+		float discriminant = b * b - 4.0f * a * c;
+		result.Discriminant = discriminant;
+		
+		if (discriminant > 0.0f)
+		{
+			// calculate the two hit points
+			result.T[0] = (-b - glm::sqrt(discriminant)) / (2.0f * a);
+			result.T[1] = (-b + glm::sqrt(discriminant)) / (2.0f * a);
+		}
+
+		return result;
 	}
 }
 
@@ -37,16 +69,15 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
 
 void Renderer::Render(const Scene& scene, const Camera& camera)
 {
-	Ray ray;
-	ray.Origin = camera.GetPosition();
+	m_ActiveScene = &scene;
+	m_ActiveCamera = &camera;
+
 
 	for (uint32_t y = 0; y < m_FinalImage->GetHeight(); y++)
 	{
 		for (uint32_t x = 0; x < m_FinalImage->GetWidth(); x++)
 		{
-			ray.Direction = camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
-
-			glm::vec4 color = TraceRay(scene, ray);
+			glm::vec4 color = RayGenPerPixel(x, y);
 			color = glm::clamp(color, glm::vec4(0.0f), glm::vec4(1.0f));
 
 			// pass the color to image data
@@ -57,139 +88,92 @@ void Renderer::Render(const Scene& scene, const Camera& camera)
 	m_FinalImage->SetData(m_ImageData);
 }
 
-glm::vec4 Renderer::TraceRay(const Scene& scene, const Ray& ray)
+glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 {
-	if (scene.Spheres.size() == 0)
+	Ray ray;
+	ray.Origin = m_ActiveCamera->GetPosition();
+	ray.Direction = m_ActiveCamera->GetRayDirections()[x + y * m_FinalImage->GetWidth()];
+
+	glm::vec3 color(0.0f);
+	float multiplier = 1.0f;
+
+	int bounces = 2;
+	for (int i = 0; i < bounces; i++)
 	{
-		float rgbScale = (ray.Direction.y * 0.5f + 0.5f) * 1.3f;
-		return glm::vec4(0.95f * rgbScale, 0.89f * rgbScale, 0.74f * rgbScale, 1);
-	}
+		Renderer::HitPayload payload = TraceRay(ray);
+		if (payload.HitDistance < 0.0f)
+		{
+			glm::vec3 skyColor(0.1f, 0.1f, 0.1f);
+			color += skyColor * multiplier;
+			break;
+		}
+		// light
+		glm::vec3 lightDir(1.0f, -1.0f, -1.0f);
+		lightDir = glm::normalize(lightDir);
+		float lightMultiplier = std::max(glm::dot(payload.HitNormal, -lightDir), 0.0f);
 
-	// plane
-	glm::vec3 planeOrigin(0.0f, -0.5f, 0.0f);
-	//glm::vec3 planeNormal(0.0f, 1.0f, 0.0f);
-
-	// light
-	glm::vec3 lightDir(1.0f, -1.0f, -1.0f);
-	lightDir = glm::normalize(lightDir);
-
-	// closet hit point
-	const Sphere* closestSphere = nullptr;
-	float closestT = FLT_MAX;
-	float closestDiscriminant = FLT_MAX;
-
-	for (const Sphere& sphere : scene.Spheres)
-	{
 		// sphere
-		glm::vec3 sphereOrigin = sphere.Origin;
-		float sphereRadius = sphere.Radius;
+		const Sphere& sphere = m_ActiveScene->Spheres[payload.ObjectIndex];
+		glm::vec3 sphereColor = sphere.Albedo * lightMultiplier;
 
-		// ray = p + td
-		// p = ray origin, d = ray direction, o = circle origin, r = radius, t = hit distance
-		// (dx^2 + dy^2)t^2 + 2(pxdx + pydy - (dxox + dyoy))t + (px^2 + py^2 + ox^2 + oy^2 - 2(pxox + pyoy) - r^2) = 0
-		// discriminant = b^2 - 4ac
-		// t = (-b +- sqrt(discriminant)) / 2a
+		// add into color
+		color += sphereColor * multiplier;
+		multiplier *= 0.7f;
 
-		// calculating if the camera ray intersects with the sphere
-		float a = glm::dot(ray.Direction, ray.Direction);
-		float b = 2.0f * (glm::dot(ray.Origin, ray.Direction) - glm::dot(ray.Direction, sphereOrigin));
-		float c = glm::dot(ray.Origin, ray.Origin) + glm::dot(sphereOrigin, sphereOrigin) - 2.0f * glm::dot(ray.Origin, sphereOrigin) - sphereRadius * sphereRadius;
+		// move out a bit in case of dropping inside the sphere
+		ray.Origin = payload.HitPosition + payload.HitNormal * 0.0001f;
+		// to calculate reflectRay based on originRay and normal(must be normalized),
+		// just filp the ray base at the normal direction in the distance of 2*|originRay|*cos¦È
+		// reflectRay = originRay - 2 * (originRay * normal) * normal
+		// ray.Direction = ray.Direction - 2 * glm::dot(ray.Direction, payload.HitNormal) * payload.HitNormal;
+		ray.Direction = glm::reflect(ray.Direction, payload.HitNormal);
+	}
 
-		float discriminant = b * b - 4.0f * a * c;
+	return glm::vec4(color, 1);
+}
 
-		// if intersects, draw the pixel as sphere
-		if (discriminant >= 0.0f)
+Renderer::HitPayload Renderer::TraceRay(const Ray& ray)
+{
+	// closet hit point
+	int closestSphere = -1;
+	float closestDistance = FLT_MAX;
+
+	// calculating if the ray intersects with the spheres
+	for (size_t i = 0; i < m_ActiveScene->Spheres.size(); i++)
+	{
+		Utils::QuadraticResult result = Utils::SolveQuadratic(ray, m_ActiveScene->Spheres[i]);
+
+		// if intersects and showing in the front
+		if (result.Discriminant >= 0.0f && result.T[0] >= 0 && result.T[0] < closestDistance)
 		{
-			// calculate the two hit points
-			float t[] = {
-				(-b - glm::sqrt(discriminant)) / (2.0f * a),
-				(-b + glm::sqrt(discriminant)) / (2.0f * a)
-			};
-
-			if (t[0] >= 0 && t[0] < closestT)
-			{
-				closestT = t[0];
-				closestSphere = &sphere;
-				closestDiscriminant = discriminant;
-			}
+			closestDistance = result.T[0];
+			closestSphere = (int)i;
 		}
 	}
 
-	// calculating if the camera ray intersects with the plane
-	float t = (planeOrigin.y - ray.Origin.y) / (float)ray.Direction.y;
-
-	// hit plane AND hit plane closer than closestT(could be hitting sphere or FLT_MAX)
-	// draw plane or shadow
-	if (t > 0 && t < closestT)
+	if (closestSphere < 0)
 	{
-		for (const Sphere& sphere : scene.Spheres)
-		{
-			// sphere
-			glm::vec3 sphereOrigin = sphere.Origin;
-			float sphereRadius = sphere.Radius;
-
-			if (t > 0)
-			{
-				// calculate if the camera ray intersects with the shadow area
-				// set the intersect point of camera and plane as a new origin, shot a ray in -lightDir direction, see if it intersects with the sphere
-				glm::vec3 intersectOrigin = ray.Origin + ray.Direction * t;
-
-				float a = glm::dot(-lightDir, -lightDir);
-				float b = 2.0f * (glm::dot(intersectOrigin, -lightDir) - glm::dot(-lightDir, sphereOrigin));
-				float c = glm::dot(intersectOrigin, intersectOrigin) + glm::dot(sphereOrigin, sphereOrigin) - 2.0f * glm::dot(intersectOrigin, sphereOrigin) - sphereRadius * sphereRadius;
-
-				float discriminant = b * b - 4.0f * a * c;
-
-				if (discriminant >= 0.0f )
-				{
-					float t[] = {
-						(-b - glm::sqrt(discriminant)) / (2.0f * a),
-						(-b + glm::sqrt(discriminant)) / (2.0f * a)
-					};
-
-					if (t[0] >= 0.0f)
-					{
-						// DRAW shadow
-						float grayScale = (1.0f / (discriminant + 1.0f)) * 0.3f;
-						return glm::vec4(grayScale, grayScale, grayScale, 1);
-					}
-				}
-
-			}
-		}
-		// DRAW plane
-		return glm::vec4(0.51f, 0.38f, 0.64f, 1);
+		return MissHit(ray);
 	}
-	else if (closestSphere == nullptr)
-	{
-		// DRAW background
-		float rgbScale = (ray.Direction.y * 0.5f + 0.5f) * 1.3f;
-		return glm::vec4(0.95f * rgbScale, 0.89f * rgbScale, 0.74f * rgbScale, 1);
-	}
-	else
-	{
-		// DRAW outline
-		if (closestDiscriminant <= closestSphere->Radius * 0.1f)
-		{
-			return glm::vec4(1.0f);
-		}
 
-		// DRAW sphere
-		// calculate the closest hit point position and normal
-		glm::vec3 hitPosition = ray.Origin + ray.Direction * closestT;
-		glm::vec3 hitNormal = glm::normalize(hitPosition - closestSphere->Origin);
+	return ClosestHit(ray, closestDistance, closestSphere);
+}
 
-		// For two vectors a, b
-		// the dot product, dot(a, b) = |a||b|cos¦È
-		// which represents the similarity between two vectors' directions.
-		// In this case, the more the hitNormal faces where the light comes from, 
-		// the multiplier gets larger.
-		float lightMultiplier = std::max(glm::dot(hitNormal, -lightDir), 0.0f);
+Renderer::HitPayload Renderer::ClosestHit(const Ray& ray, float closestDistance, int closestObjectIndex)
+{
+	const Sphere& closestSphere = m_ActiveScene->Spheres[closestObjectIndex];
 
-		// Visualize the normal
-		//glm::vec3 sphereColor = (hitNormal * 0.5f + 0.5f) * lightMultiplier;
-		glm::vec3 sphereColor = (hitNormal * 0.5f + 0.5f) * closestSphere->Albedo * lightMultiplier;
+	Renderer::HitPayload payload;
+	payload.HitDistance = closestDistance;
+	payload.ObjectIndex = closestObjectIndex;
+	payload.HitPosition = ray.Origin + ray.Direction * closestDistance;
+	payload.HitNormal = glm::normalize(payload.HitPosition - closestSphere.Origin);
+	return payload;
+}
 
-		return glm::vec4(sphereColor, 1);
-	}
+Renderer::HitPayload Renderer::MissHit(const Ray& ray)
+{
+	Renderer::HitPayload payload;
+	payload.HitDistance = -1.0f;
+	return payload;
 }
