@@ -10,6 +10,11 @@ For reference, I am following the book series ***Ray Tracing in One Weekend, The
 ###### Book Series [Ray Tracing in One Weekend, The Next Week, and The Rest of Your Life](https://raytracing.github.io/)
 ###### Video Series [Ray Tracing, from The Cherno](https://youtube.com/playlist?list=PLlrATfBNZ98edc5GshdBtREv5asFW3yXl)
 
-
 ## GUI Template Usage
 Although called "from scratch", I use an app template from `TheCherno/WalnutAppTemplate.git` to help me handle GUI and visualize the render output interactively. This helps me get rid of things that are not so important at this point and focus on the core parts. 
+
+## Current Stage
+
+
+https://user-images.githubusercontent.com/91817338/218278803-2550c75b-38cf-4b6a-abe5-6f1bfa2f49e9.mp4
+
