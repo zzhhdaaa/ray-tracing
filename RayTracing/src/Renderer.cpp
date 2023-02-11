@@ -65,6 +65,9 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
 
 	delete[] m_ImageData;
 	m_ImageData = new uint32_t[width * height];
+
+	delete[] m_AccumulationData;
+	m_AccumulationData = new glm::vec4[width * height];
 }
 
 void Renderer::Render(const Scene& scene, const Camera& camera)
@@ -72,20 +75,28 @@ void Renderer::Render(const Scene& scene, const Camera& camera)
 	m_ActiveScene = &scene;
 	m_ActiveCamera = &camera;
 
+	if (m_AccumulationFrame == 1)
+		memset(m_AccumulationData, 0, m_FinalImage->GetHeight() * m_FinalImage->GetWidth() * sizeof(glm::vec4));
 
 	for (uint32_t y = 0; y < m_FinalImage->GetHeight(); y++)
 	{
 		for (uint32_t x = 0; x < m_FinalImage->GetWidth(); x++)
 		{
 			glm::vec4 color = RayGenPerPixel(x, y);
-			color = glm::clamp(color, glm::vec4(0.0f), glm::vec4(1.0f));
+			m_AccumulationData[x + y * m_FinalImage->GetWidth()] += color;
+			glm::vec4 accumulatedColor = m_AccumulationData[x + y * m_FinalImage->GetWidth()] / (float)m_AccumulationFrame;
+			accumulatedColor = glm::clamp(accumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
 
-			// pass the color to image data
-			m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(color);
+			m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(accumulatedColor);
 		}
 	}
 
 	m_FinalImage->SetData(m_ImageData);
+
+	if (m_Settings.Accumulate)
+		m_AccumulationFrame++;
+	else
+		m_AccumulationFrame = 1;
 }
 
 glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
@@ -97,13 +108,13 @@ glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 	glm::vec3 color(0.0f);
 	float multiplier = 1.0f;
 
-	int bounces = 2;
+	int bounces = 5;
 	for (int i = 0; i < bounces; i++)
 	{
 		Renderer::HitPayload payload = TraceRay(ray);
 		if (payload.HitDistance < 0.0f)
 		{
-			glm::vec3 skyColor(0.1f, 0.1f, 0.1f);
+			glm::vec3 skyColor(0.9f, 0.8f, 0.7f);
 			color += skyColor * multiplier;
 			break;
 		}
@@ -112,13 +123,14 @@ glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 		lightDir = glm::normalize(lightDir);
 		float lightMultiplier = std::max(glm::dot(payload.HitNormal, -lightDir), 0.0f);
 
-		// sphere
+		// sphere & material
 		const Sphere& sphere = m_ActiveScene->Spheres[payload.ObjectIndex];
-		glm::vec3 sphereColor = sphere.Albedo * lightMultiplier;
+		const Material& material = m_ActiveScene->Materials[sphere.MaterialIndex];
+		glm::vec3 sphereColor = material.Albedo * lightMultiplier;
 
 		// add into color
 		color += sphereColor * multiplier;
-		multiplier *= 0.7f;
+		multiplier *= 0.5f;
 
 		// move out a bit in case of dropping inside the sphere
 		ray.Origin = payload.HitPosition + payload.HitNormal * 0.0001f;
@@ -126,7 +138,8 @@ glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 		// just filp the ray base at the normal direction in the distance of 2*|originRay|*cos¦È
 		// reflectRay = originRay - 2 * (originRay * normal) * normal
 		// ray.Direction = ray.Direction - 2 * glm::dot(ray.Direction, payload.HitNormal) * payload.HitNormal;
-		ray.Direction = glm::reflect(ray.Direction, payload.HitNormal);
+		glm::vec3 reflectNormal = payload.HitNormal + material.Roughness * Walnut::Random::Vec3(-0.5f, 0.5f);
+		ray.Direction = glm::reflect(ray.Direction, reflectNormal);
 	}
 
 	return glm::vec4(color, 1);
