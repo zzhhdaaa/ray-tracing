@@ -16,5 +16,5 @@ Although called "from scratch", I use an app template from `TheCherno/WalnutAppT
 ## Current Stage
 
 
-https://user-images.githubusercontent.com/91817338/218278803-2550c75b-38cf-4b6a-abe5-6f1bfa2f49e9.mp4
+https://user-images.githubusercontent.com/91817338/218279347-4501cb06-651f-4d8f-875d-b7b136045c21.mp4
 
