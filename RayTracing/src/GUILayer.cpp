@@ -42,8 +42,8 @@ GUILayer::GUILayer()
 	}
 	{
 		Sphere sphere;
-		sphere.Origin = { 0.0f, -501.0f, 0.0f };
-		sphere.Radius = 500.0f;
+		sphere.Origin = { 0.0f, -1001.0f, 0.0f };
+		sphere.Radius = 1000.0f;
 		sphere.MaterialIndex = 3;
 		m_Scene.Spheres.push_back(sphere);
 	}
