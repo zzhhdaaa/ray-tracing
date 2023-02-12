@@ -14,7 +14,8 @@ For reference, I am following the book series ***Ray Tracing in One Weekend, The
 Although called "from scratch", I use an app template from `TheCherno/WalnutAppTemplate.git` to help me handle GUI and visualize the render output interactively. This helps me get rid of things that are not so important at this point and focus on the core parts. 
 
 ## Current Stage
+02/11/2023: multi-thread rendering on cpu
 
 
-https://user-images.githubusercontent.com/91817338/218279347-4501cb06-651f-4d8f-875d-b7b136045c21.mp4
+https://user-images.githubusercontent.com/91817338/218294031-5f995492-5fad-4645-834b-66d3c0a50732.mp4
 
