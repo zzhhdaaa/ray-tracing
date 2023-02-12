@@ -5,19 +5,20 @@ GUILayer::GUILayer()
 {
 	Material& redSphere = m_Scene.Materials.emplace_back();
 	redSphere.Albedo = glm::vec3(1.0f, 0.4f, 0.4f);
-	redSphere.Roughness = 0.2f;
+	redSphere.Roughness = 0.1f;
 
 	Material& greenSphere = m_Scene.Materials.emplace_back();
 	greenSphere.Albedo = glm::vec3(0.4f, 1.0f, 0.4f);
-	greenSphere.Roughness = 0.6f;
+	greenSphere.Roughness = 0.5f;
 
 	Material& blueSphere = m_Scene.Materials.emplace_back();
 	blueSphere.Albedo = glm::vec3(0.4f, 0.4f, 1.0f);
-	blueSphere.Roughness = 0.3f;
+	blueSphere.Roughness = 0.05f;
 
 	Material& graySphere = m_Scene.Materials.emplace_back();
-	graySphere.Albedo = glm::vec3(0.1f, 0.2f, 0.3f);
-	graySphere.Roughness = 0.8f;
+	graySphere.Albedo = glm::vec3(1.0f, 0.7f, 0.7f);
+	graySphere.Roughness = 0.2f;
+	graySphere.Metallic = 0.8f;
 
 	{
 		Sphere sphere;
@@ -28,7 +29,7 @@ GUILayer::GUILayer()
 	}
 	{
 		Sphere sphere;
-		sphere.Origin = { 2.0f, 0.5f, -5.0f };
+		sphere.Origin = { 2.0f, 0.5f, -3.0f };
 		sphere.Radius = 1.0f;
 		sphere.MaterialIndex = 1;
 		m_Scene.Spheres.push_back(sphere);
@@ -42,8 +43,8 @@ GUILayer::GUILayer()
 	}
 	{
 		Sphere sphere;
-		sphere.Origin = { 0.0f, -501.0f, 0.0f };
-		sphere.Radius = 500.0f;
+		sphere.Origin = { 0.0f, -1001.0f, 0.0f };
+		sphere.Radius = 1000.0f;
 		sphere.MaterialIndex = 3;
 		m_Scene.Spheres.push_back(sphere);
 	}

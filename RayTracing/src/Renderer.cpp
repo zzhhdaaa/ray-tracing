@@ -2,7 +2,10 @@
 
 #include "Walnut/Random.h"
 
+#include <execution>
+
 #define PI 3.14159265
+#define MultiThread 1
 
 namespace Utils
 {
@@ -68,6 +71,15 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
 
 	delete[] m_AccumulationData;
 	m_AccumulationData = new glm::vec4[width * height];
+
+	m_ImageHorizontalIter.resize(width);
+	m_ImageVerticalIter.resize(height);
+
+	for (uint32_t i = 0; i < width; i++)
+		m_ImageHorizontalIter[i] = i;
+	for (uint32_t i = 0; i < height; i++)
+		m_ImageVerticalIter[i] = i;
+
 }
 
 void Renderer::Render(const Scene& scene, const Camera& camera)
@@ -77,6 +89,27 @@ void Renderer::Render(const Scene& scene, const Camera& camera)
 
 	if (m_AccumulationFrame == 1)
 		memset(m_AccumulationData, 0, m_FinalImage->GetHeight() * m_FinalImage->GetWidth() * sizeof(glm::vec4));
+
+	//std::thread::hardware_concurrency();
+
+#if MultiThread
+
+	std::for_each(std::execution::par, m_ImageVerticalIter.begin(), m_ImageVerticalIter.end(),
+		[this](uint32_t y)
+		{
+			std::for_each(std::execution::par, m_ImageHorizontalIter.begin(), m_ImageHorizontalIter.end(),
+				[this, y](uint32_t x)
+				{
+					glm::vec4 color = RayGenPerPixel(x, y);
+					m_AccumulationData[x + y * m_FinalImage->GetWidth()] += color;
+					glm::vec4 accumulatedColor = m_AccumulationData[x + y * m_FinalImage->GetWidth()] / (float)m_AccumulationFrame;
+					accumulatedColor = glm::clamp(accumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
+
+					m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(accumulatedColor);
+				});
+		});
+
+#else
 
 	for (uint32_t y = 0; y < m_FinalImage->GetHeight(); y++)
 	{
@@ -90,6 +123,8 @@ void Renderer::Render(const Scene& scene, const Camera& camera)
 			m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(accumulatedColor);
 		}
 	}
+
+#endif
 
 	m_FinalImage->SetData(m_ImageData);
 
@@ -114,7 +149,8 @@ glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 		Renderer::HitPayload payload = TraceRay(ray);
 		if (payload.HitDistance < 0.0f)
 		{
-			glm::vec3 skyColor(0.9f, 0.8f, 0.7f);
+			glm::vec3 skyColor(0.8f, 0.7f, 0.6f);
+			//skyColor = skyColor * ((float)y / m_FinalImage->GetHeight());
 			color += skyColor * multiplier;
 			break;
 		}
@@ -130,7 +166,7 @@ glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 
 		// add into color
 		color += sphereColor * multiplier;
-		multiplier *= 0.5f;
+		multiplier *= 0.35f * material.Metallic;
 
 		// move out a bit in case of dropping inside the sphere
 		ray.Origin = payload.HitPosition + payload.HitNormal * 0.0001f;
