@@ -14,8 +14,14 @@ For reference, I am following the book series ***Ray Tracing in One Weekend, The
 Although called "from scratch", I use an app template from `TheCherno/WalnutAppTemplate.git` to help me handle GUI and visualize the render output interactively. This helps me get rid of things that are not so important at this point and focus on the core parts. 
 
 ## Current Stage
-02/11/2023: multi-thread rendering on cpu
+Implementing very basic refraction. 
 
+- Add Opacity in the Material class, as a random scaler to decide whether the ray should reflect or refract
+- Use incident direction, normal, and index of refraction(IOR) to calculate the refracted direction
+- Refactor the Solve Quadratic function and its result struct for clarification
+- When a ray hits, calculate whether it hits in the front face or the back face
 
-https://user-images.githubusercontent.com/91817338/218294031-5f995492-5fad-4645-834b-66d3c0a50732.mp4
+The glass spheres still look odd when compared to a real-world one. 
+
+https://user-images.githubusercontent.com/91817338/218551512-f9477720-35ac-44d9-9295-d0570a9c7aa4.mp4
 
