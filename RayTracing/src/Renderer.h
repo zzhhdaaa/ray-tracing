@@ -33,13 +33,16 @@ private:
 		glm::vec3 HitPosition;
 		glm::vec3 HitNormal;
 
+		bool HitRefracted = false;
+		bool IsFrontFace = true;
+
 		int ObjectIndex;
 	};
 
 	glm::vec4 RayGenPerPixel(uint32_t x, uint32_t y);
 
 	HitPayload TraceRay(const Ray& ray);
-	HitPayload ClosestHit(const Ray& ray, float closestDistance, int closestObjectIndex);
+	HitPayload ClosestHit(const Ray& ray, float closestDistance, int closestObjectIndex, bool isFrontFace);
 	HitPayload MissHit(const Ray& ray);
 private:
 	std::shared_ptr<Walnut::Image> m_FinalImage;

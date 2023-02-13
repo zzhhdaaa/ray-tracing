@@ -13,6 +13,7 @@ namespace Utils
 	{
 		float Discriminant;
 		float T[2];
+		bool IsFrontFace;
 	};
 
 	static uint32_t ConvertToRGBA(const glm::vec4& color)
@@ -44,11 +45,47 @@ namespace Utils
 		if (discriminant > 0.0f)
 		{
 			// calculate the two hit points
-			result.T[0] = (-b - glm::sqrt(discriminant)) / (2.0f * a);
-			result.T[1] = (-b + glm::sqrt(discriminant)) / (2.0f * a);
+			float t0 = (-b - glm::sqrt(discriminant)) / (2.0f * a);
+			float t1 = (-b + glm::sqrt(discriminant)) / (2.0f * a);
+
+			if (t0 < 0 && t1 > 0)
+			{
+				result.T[0] = t1;
+				result.T[1] = t0;
+				result.IsFrontFace = false;
+			}
+			else
+			{
+				result.T[0] = t0;
+				result.T[1] = t1;
+				result.IsFrontFace = true;
+			}
 		}
 
 		return result;
+	}
+
+	static glm::vec3 RandomUnitVec3()
+	{
+		while (true)
+		{
+			glm::vec3 v = Walnut::Random::Vec3(-1.0f, 1.0f);
+			if (glm::dot(v,v) >= 1.0f)
+				continue;
+			return glm::normalize(v);
+		}
+	}
+
+	static glm::vec3 RefractedDirection(const glm::vec3& inDir, const glm::vec3& hitNor, float eta)
+	{
+		float cosThetaI = glm::dot(hitNor, inDir);
+		float sin2ThetaI = std::max(0.0f, (float)(1 - cosThetaI * cosThetaI));
+		float sin2ThetaT = eta * eta * sin2ThetaI;
+
+		//if (sin2ThetaT >= 1) return inDir;
+		float cosThetaT = std::sqrt(1 - sin2ThetaT);
+		glm::vec3 outDir = eta * (-inDir) + (eta * cosThetaI - cosThetaT) * hitNor;
+		return outDir;
 	}
 }
 
@@ -136,6 +173,9 @@ void Renderer::Render(const Scene& scene, const Camera& camera)
 
 glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 {
+	//x = std::clamp(x, (uint32_t)0, m_FinalImage->GetWidth() - 1);
+	//y = std::clamp(y, (uint32_t)0, m_FinalImage->GetHeight() - 1);
+
 	Ray ray;
 	ray.Origin = m_ActiveCamera->GetPosition();
 	ray.Direction = m_ActiveCamera->GetRayDirections()[x + y * m_FinalImage->GetWidth()];
@@ -143,9 +183,13 @@ glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 	glm::vec3 color(0.0f);
 	float multiplier = 1.0f;
 
-	int bounces = 5;
+	int bounces = 20;
 	for (int i = 0; i < bounces; i++)
 	{
+		// anti-aliasing
+		ray.Direction += Walnut::Random::Vec3(-0.0006f, 0.0006f);
+
+		// the payload of every hit bounce
 		Renderer::HitPayload payload = TraceRay(ray);
 		if (payload.HitDistance < 0.0f)
 		{
@@ -154,10 +198,11 @@ glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 			color += skyColor * multiplier;
 			break;
 		}
+
 		// light
 		glm::vec3 lightDir(1.0f, -1.0f, -1.0f);
 		lightDir = glm::normalize(lightDir);
-		float lightMultiplier = std::max(glm::dot(payload.HitNormal, -lightDir), 0.0f);
+		float lightMultiplier = std::max(glm::dot(payload.HitNormal, -lightDir), -0.1f);
 
 		// sphere & material
 		const Sphere& sphere = m_ActiveScene->Spheres[payload.ObjectIndex];
@@ -165,17 +210,43 @@ glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 		glm::vec3 sphereColor = material.Albedo * lightMultiplier;
 
 		// add into color
-		color += sphereColor * multiplier;
-		multiplier *= 0.35f * material.Metallic;
+		color += sphereColor * multiplier * std::sqrt(material.Opacity);
 
-		// move out a bit in case of dropping inside the sphere
-		ray.Origin = payload.HitPosition + payload.HitNormal * 0.0001f;
-		// to calculate reflectRay based on originRay and normal(must be normalized),
-		// just filp the ray base at the normal direction in the distance of 2*|originRay|*cos¦È
-		// reflectRay = originRay - 2 * (originRay * normal) * normal
-		// ray.Direction = ray.Direction - 2 * glm::dot(ray.Direction, payload.HitNormal) * payload.HitNormal;
-		glm::vec3 reflectNormal = payload.HitNormal + material.Roughness * Walnut::Random::Vec3(-0.5f, 0.5f);
-		ray.Direction = glm::reflect(ray.Direction, reflectNormal);
+		glm::vec3 reflectNormal = glm::normalize(payload.HitNormal + material.Roughness * 0.5f * Utils::RandomUnitVec3());
+		glm::vec3 inDir = glm::normalize(ray.Direction);
+
+		if (payload.HitRefracted)
+		{
+			float ir = 1.9f;
+			if (payload.IsFrontFace)
+			{
+				// move in a bit in case of dropping inside the sphere
+				ray.Origin = payload.HitPosition - payload.HitNormal * 0.0001f;
+				float refractionRatio = -1.0f / ir;
+				//ray.Direction = Utils::RefractedDirection(ray.Direction, reflectNormal, refractionRatio);
+				ray.Direction = glm::refract(inDir, reflectNormal, refractionRatio);
+			}
+			else
+			{
+				// move in a bit out case of dropping inside the sphere
+				ray.Origin = payload.HitPosition + payload.HitNormal * 0.0001f;
+				float refractionRatio = ir;
+				//ray.Direction = Utils::RefractedDirection(ray.Direction, -reflectNormal, refractionRatio);
+				ray.Direction = glm::refract(inDir, -reflectNormal, refractionRatio);
+			}
+			multiplier *= material.Metallic * (1.0f - material.Opacity);
+		}
+		else
+		{
+			multiplier *= 0.35f * material.Metallic;
+			// move out a bit in case of dropping inside the sphere
+			ray.Origin = payload.HitPosition + payload.HitNormal * 0.0001f;
+			// to calculate reflectRay based on originRay and normal(must be normalized),
+			// just filp the ray base at the normal direction in the distance of 2*|originRay|*cos¦È
+			// reflectRay = originRay - 2 * (originRay * normal) * normal
+			// ray.Direction = ray.Direction - 2 * glm::dot(ray.Direction, payload.HitNormal) * payload.HitNormal;
+			ray.Direction = glm::reflect(ray.Direction, reflectNormal);
+		}
 	}
 
 	return glm::vec4(color, 1);
@@ -186,6 +257,7 @@ Renderer::HitPayload Renderer::TraceRay(const Ray& ray)
 	// closet hit point
 	int closestSphere = -1;
 	float closestDistance = FLT_MAX;
+	bool closestIsFrontFace = true;
 
 	// calculating if the ray intersects with the spheres
 	for (size_t i = 0; i < m_ActiveScene->Spheres.size(); i++)
@@ -197,6 +269,7 @@ Renderer::HitPayload Renderer::TraceRay(const Ray& ray)
 		{
 			closestDistance = result.T[0];
 			closestSphere = (int)i;
+			closestIsFrontFace = result.IsFrontFace;
 		}
 	}
 
@@ -205,18 +278,29 @@ Renderer::HitPayload Renderer::TraceRay(const Ray& ray)
 		return MissHit(ray);
 	}
 
-	return ClosestHit(ray, closestDistance, closestSphere);
+	return ClosestHit(ray, closestDistance, closestSphere, closestIsFrontFace);
 }
 
-Renderer::HitPayload Renderer::ClosestHit(const Ray& ray, float closestDistance, int closestObjectIndex)
+Renderer::HitPayload Renderer::ClosestHit(const Ray& ray, float closestDistance, int closestObjectIndex, bool closestIsFrontFace)
 {
 	const Sphere& closestSphere = m_ActiveScene->Spheres[closestObjectIndex];
 
 	Renderer::HitPayload payload;
 	payload.HitDistance = closestDistance;
 	payload.ObjectIndex = closestObjectIndex;
+	payload.IsFrontFace = closestIsFrontFace;
 	payload.HitPosition = ray.Origin + ray.Direction * closestDistance;
 	payload.HitNormal = glm::normalize(payload.HitPosition - closestSphere.Origin);
+
+	if (std::abs(Walnut::Random::Float()) > m_ActiveScene->Materials[closestSphere.MaterialIndex].Opacity)
+	{
+		payload.HitRefracted = true;
+	}
+	else
+	{
+		payload.HitRefracted = false;
+	}
+
 	return payload;
 }
 

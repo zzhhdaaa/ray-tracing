@@ -5,20 +5,22 @@ GUILayer::GUILayer()
 {
 	Material& redSphere = m_Scene.Materials.emplace_back();
 	redSphere.Albedo = glm::vec3(1.0f, 0.4f, 0.4f);
-	redSphere.Roughness = 0.1f;
+	redSphere.Roughness = 0.5f;
+	redSphere.Opacity = 0.3f;
 
 	Material& greenSphere = m_Scene.Materials.emplace_back();
 	greenSphere.Albedo = glm::vec3(0.4f, 1.0f, 0.4f);
-	greenSphere.Roughness = 0.5f;
+	greenSphere.Roughness = 0.0f;
+	greenSphere.Opacity = 0.0f;
 
 	Material& blueSphere = m_Scene.Materials.emplace_back();
 	blueSphere.Albedo = glm::vec3(0.4f, 0.4f, 1.0f);
-	blueSphere.Roughness = 0.05f;
+	blueSphere.Roughness = 0.02f;
+	blueSphere.Opacity = 1.0f;
 
 	Material& graySphere = m_Scene.Materials.emplace_back();
 	graySphere.Albedo = glm::vec3(1.0f, 0.7f, 0.7f);
-	graySphere.Roughness = 0.2f;
-	graySphere.Metallic = 0.8f;
+	graySphere.Roughness = 0.15f;
 
 	{
 		Sphere sphere;
@@ -92,11 +94,13 @@ void GUILayer::OnUIRender()
 		ImGui::PushID(i);
 
 		Material& material = m_Scene.Materials[i];
-		if(ImGui::ColorEdit3("Albedo", glm::value_ptr(material.Albedo)))
+		if (ImGui::ColorEdit3("Albedo", glm::value_ptr(material.Albedo)))
 			m_Renderer.ResetAccumulationFrame();
-		if(ImGui::DragFloat("Roughness", &material.Roughness, 0.01f, 0.0f, 1.0f))
+		if (ImGui::DragFloat("Roughness", &material.Roughness, 0.01f, 0.0f, 1.0f))
 			m_Renderer.ResetAccumulationFrame();
-		if(ImGui::DragFloat("Metallic", &material.Metallic, 0.01f, 0.0f, 1.0f))
+		if (ImGui::DragFloat("Metallic", &material.Metallic, 0.01f, 0.0f, 1.0f))
+			m_Renderer.ResetAccumulationFrame();
+		if (ImGui::DragFloat("Opacity", &material.Opacity, 0.01f, 0.0f, 1.0f))
 			m_Renderer.ResetAccumulationFrame();
 
 		ImGui::Separator();
