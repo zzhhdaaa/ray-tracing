@@ -9,12 +9,6 @@
 
 namespace Utils
 {
-	struct QuadraticResult
-	{
-		float Discriminant;
-		float T[2];
-		bool IsFrontFace;
-	};
 
 	static uint32_t ConvertToRGBA(const glm::vec4& color)
 	{
@@ -26,44 +20,6 @@ namespace Utils
 		return 0x00000000 | a << 24 | b << 16 | g << 8 | r;
 	}
 
-	static QuadraticResult SolveQuadratic(const Ray& ray, const Sphere& sphere)
-	{
-		QuadraticResult result;
-
-		// sphere
-		glm::vec3 sphereOrigin = sphere.Origin;
-		float sphereRadius = sphere.Radius;
-
-		// calculating if the camera ray intersects with the sphere
-		float a = glm::dot(ray.Direction, ray.Direction);
-		float b = 2.0f * (glm::dot(ray.Origin, ray.Direction) - glm::dot(ray.Direction, sphereOrigin));
-		float c = glm::dot(ray.Origin, ray.Origin) + glm::dot(sphereOrigin, sphereOrigin) - 2.0f * glm::dot(ray.Origin, sphereOrigin) - sphereRadius * sphereRadius;
-
-		float discriminant = b * b - 4.0f * a * c;
-		result.Discriminant = discriminant;
-		
-		if (discriminant > 0.0f)
-		{
-			// calculate the two hit points
-			float t0 = (-b - glm::sqrt(discriminant)) / (2.0f * a);
-			float t1 = (-b + glm::sqrt(discriminant)) / (2.0f * a);
-
-			if (t0 < 0 && t1 > 0)
-			{
-				result.T[0] = t1;
-				result.T[1] = t0;
-				result.IsFrontFace = false;
-			}
-			else
-			{
-				result.T[0] = t0;
-				result.T[1] = t1;
-				result.IsFrontFace = true;
-			}
-		}
-
-		return result;
-	}
 
 	static glm::vec3 RandomUnitVec3()
 	{
@@ -173,16 +129,20 @@ void Renderer::Render(const Scene& scene, const Camera& camera)
 
 glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 {
-	//x = std::clamp(x, (uint32_t)0, m_FinalImage->GetWidth() - 1);
-	//y = std::clamp(y, (uint32_t)0, m_FinalImage->GetHeight() - 1);
-
+	// shoot a ray
 	Ray ray;
 	ray.Origin = m_ActiveCamera->GetPosition();
 	ray.Direction = m_ActiveCamera->GetRayDirections()[x + y * m_FinalImage->GetWidth()];
 
+	// light
+	glm::vec3 lightDir(1.0f, -1.0f, -1.0f);
+	lightDir = glm::normalize(lightDir);
+
+	// output color
 	glm::vec3 color(0.0f);
 	float multiplier = 1.0f;
 
+	// ray bounces
 	int bounces = 20;
 	for (int i = 0; i < bounces; i++)
 	{
@@ -193,15 +153,13 @@ glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 		Renderer::HitPayload payload = TraceRay(ray);
 		if (payload.HitDistance < 0.0f)
 		{
-			glm::vec3 skyColor(0.8f, 0.7f, 0.6f);
+			glm::vec3 skyColor(0.8f, 0.9f, 1.0f);
 			//skyColor = skyColor * ((float)y / m_FinalImage->GetHeight());
-			color += skyColor * multiplier;
+			color += skyColor * multiplier * (glm::dot(glm::normalize(ray.Direction), -lightDir) * 0.5f + 0.5f);
 			break;
 		}
 
-		// light
-		glm::vec3 lightDir(1.0f, -1.0f, -1.0f);
-		lightDir = glm::normalize(lightDir);
+		// surface light multiplier
 		float lightMultiplier = std::max(glm::dot(payload.HitNormal, -lightDir), -0.1f);
 
 		// sphere & material
@@ -217,7 +175,7 @@ glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 
 		if (payload.HitRefracted)
 		{
-			float ir = 1.9f;
+			float ir = 1.33f;
 			if (payload.IsFrontFace)
 			{
 				// move in a bit in case of dropping inside the sphere
@@ -258,11 +216,12 @@ Renderer::HitPayload Renderer::TraceRay(const Ray& ray)
 	int closestSphere = -1;
 	float closestDistance = FLT_MAX;
 	bool closestIsFrontFace = true;
+	Renderer::QuadraticResult closestResult;
 
 	// calculating if the ray intersects with the spheres
 	for (size_t i = 0; i < m_ActiveScene->Spheres.size(); i++)
 	{
-		Utils::QuadraticResult result = Utils::SolveQuadratic(ray, m_ActiveScene->Spheres[i]);
+		Renderer::QuadraticResult result = Renderer::SolveQuadratic(ray, m_ActiveScene->Spheres[i]);
 
 		// if intersects and showing in the front
 		if (result.Discriminant >= 0.0f && result.T[0] >= 0 && result.T[0] < closestDistance)
@@ -270,6 +229,7 @@ Renderer::HitPayload Renderer::TraceRay(const Ray& ray)
 			closestDistance = result.T[0];
 			closestSphere = (int)i;
 			closestIsFrontFace = result.IsFrontFace;
+			closestResult = result;
 		}
 	}
 
@@ -278,19 +238,19 @@ Renderer::HitPayload Renderer::TraceRay(const Ray& ray)
 		return MissHit(ray);
 	}
 
-	return ClosestHit(ray, closestDistance, closestSphere, closestIsFrontFace);
+	return ClosestHit(ray, closestResult, closestSphere);
 }
 
-Renderer::HitPayload Renderer::ClosestHit(const Ray& ray, float closestDistance, int closestObjectIndex, bool closestIsFrontFace)
+Renderer::HitPayload Renderer::ClosestHit(const Ray& ray, const QuadraticResult& closestResult, int closestObjectIndex)
 {
 	const Sphere& closestSphere = m_ActiveScene->Spheres[closestObjectIndex];
 
 	Renderer::HitPayload payload;
-	payload.HitDistance = closestDistance;
-	payload.ObjectIndex = closestObjectIndex;
-	payload.IsFrontFace = closestIsFrontFace;
-	payload.HitPosition = ray.Origin + ray.Direction * closestDistance;
+	payload.HitDistance = closestResult.T[0];
+	payload.HitPosition = ray.Origin + ray.Direction * closestResult.T[0];
 	payload.HitNormal = glm::normalize(payload.HitPosition - closestSphere.Origin);
+	payload.IsFrontFace = closestResult.IsFrontFace;
+	payload.ObjectIndex = closestObjectIndex;
 
 	if (std::abs(Walnut::Random::Float()) > m_ActiveScene->Materials[closestSphere.MaterialIndex].Opacity)
 	{
@@ -309,4 +269,43 @@ Renderer::HitPayload Renderer::MissHit(const Ray& ray)
 	Renderer::HitPayload payload;
 	payload.HitDistance = -1.0f;
 	return payload;
+}
+
+Renderer::QuadraticResult Renderer::SolveQuadratic(const Ray& ray, const Sphere& sphere)
+{
+	Renderer::QuadraticResult result;
+
+	// sphere
+	glm::vec3 sphereOrigin = sphere.Origin;
+	float sphereRadius = sphere.Radius;
+
+	// calculating if the camera ray intersects with the sphere
+	float a = glm::dot(ray.Direction, ray.Direction);
+	float b = 2.0f * (glm::dot(ray.Origin, ray.Direction) - glm::dot(ray.Direction, sphereOrigin));
+	float c = glm::dot(ray.Origin, ray.Origin) + glm::dot(sphereOrigin, sphereOrigin) - 2.0f * glm::dot(ray.Origin, sphereOrigin) - sphereRadius * sphereRadius;
+
+	float discriminant = b * b - 4.0f * a * c;
+	result.Discriminant = discriminant;
+
+	if (discriminant > 0.0f)
+	{
+		// calculate the two hit points
+		float t0 = (-b - glm::sqrt(discriminant)) / (2.0f * a);
+		float t1 = (-b + glm::sqrt(discriminant)) / (2.0f * a);
+
+		if (t0 < 0 && t1 > 0)
+		{
+			result.T[0] = t1;
+			result.T[1] = t0;
+			result.IsFrontFace = false;
+		}
+		else
+		{
+			result.T[0] = t0;
+			result.T[1] = t1;
+			result.IsFrontFace = true;
+		}
+	}
+
+	return result;
 }

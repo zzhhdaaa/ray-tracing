@@ -19,13 +19,13 @@ GUILayer::GUILayer()
 	blueSphere.Opacity = 1.0f;
 
 	Material& graySphere = m_Scene.Materials.emplace_back();
-	graySphere.Albedo = glm::vec3(1.0f, 0.7f, 0.7f);
+	graySphere.Albedo = glm::vec3(0.9f, 0.9f, 0.9f);
 	graySphere.Roughness = 0.15f;
 
 	{
 		Sphere sphere;
-		sphere.Origin = { 0.0f, -0.5f, 0.0f };
-		sphere.Radius = 0.5f;
+		sphere.Origin = { 0.0f, -0.4f, 0.0f };
+		sphere.Radius = 0.6f;
 		sphere.MaterialIndex = 0;
 		m_Scene.Spheres.push_back(sphere);
 	}
@@ -38,7 +38,7 @@ GUILayer::GUILayer()
 	}
 	{
 		Sphere sphere;
-		sphere.Origin = { -2.0f, 0.0f, -4.0f };
+		sphere.Origin = { -2.0f, 1.0f, -3.0f };
 		sphere.Radius = 1.5f;
 		sphere.MaterialIndex = 2;
 		m_Scene.Spheres.push_back(sphere);
