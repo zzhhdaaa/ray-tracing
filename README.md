@@ -3,7 +3,7 @@
 This is a repo for recording my self-study path of creating a ray-tracing renderer from scratch. 
 
 ## Getting Started
-Once you've cloned, the Visual Studio 2022 solution file is in the root named `RayTracing.sln`. And all source code of the renderer is under `RayTracing/src/`. 
+Once you've cloned, the Visual Studio 2022 solution file is in the root named `RayTracing.sln`. And all source code of the renderer is under `RayTracing/src/`. However, the `RayTracing/src/other` is where I did random tests for a better understanding(for exmaple reinventing some wheels); it's ugly now so consider not looking that. 
 
 ## Reference
 For reference, I am following the book series ***Ray Tracing in One Weekend, The Next Week, and The Rest of Your Life*** on GitHub as well as the video series ***Ray Tracing, The Cherno*** on YouTube, and then the big guy ***Physically Based Rendering:From Theory To Implementation*** by Matt Pharr, Wenzel Jakob, and Greg Humphreys. Many thanks to these authors, I have already learned a lot even though I just started.

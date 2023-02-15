@@ -2,12 +2,12 @@
 
 #include "Walnut/Image.h"
 
+#include "Scene.h"
 #include "Camera.h"
 #include "Ray.h"
-#include "Scene.h"
 
 #include <memory>
-#include <glm/glm.hpp>//OpenGL Mathematics
+#include <glm/glm.hpp>
 
 class Renderer
 {
@@ -36,14 +36,13 @@ private:
 
 	struct HitPayload
 	{
-		float HitDistance;
+		float HitDistance = 0.0f;
 		glm::vec3 HitPosition;
 		glm::vec3 HitNormal;
 
+		int ObjectIndex = 0;
 		bool HitRefracted = false;
 		bool IsFrontFace = true;
-
-		int ObjectIndex;
 	};
 
 	glm::vec4 RayGenPerPixel(uint32_t x, uint32_t y);

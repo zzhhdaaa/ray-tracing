@@ -1,7 +1,7 @@
 #include "Walnut/Application.h"
 #include "Walnut/EntryPoint.h"
 
-#include "GUILayer.h"
+#include "RendererUI.h"
 
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 {
@@ -9,7 +9,7 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 	spec.Name = "Ray Tracing";
 
 	Walnut::Application* app = new Walnut::Application(spec);
-	app->PushLayer<GUILayer>();
+	app->PushLayer<RendererUI>();
 	app->SetMenubarCallback([app]()
 	{
 		if (ImGui::BeginMenu("File"))

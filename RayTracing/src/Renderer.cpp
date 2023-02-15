@@ -73,6 +73,7 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
 	for (uint32_t i = 0; i < height; i++)
 		m_ImageVerticalIter[i] = i;
 
+	ResetAccumulationFrame();
 }
 
 void Renderer::Render(const Scene& scene, const Camera& camera)
@@ -175,21 +176,17 @@ glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 
 		if (payload.HitRefracted)
 		{
-			float ir = 1.33f;
+			float IOR = 1.33f;
 			if (payload.IsFrontFace)
 			{
-				// move in a bit in case of dropping inside the sphere
 				ray.Origin = payload.HitPosition - payload.HitNormal * 0.0001f;
-				float refractionRatio = -1.0f / ir;
-				//ray.Direction = Utils::RefractedDirection(ray.Direction, reflectNormal, refractionRatio);
+				float refractionRatio = -1.0f / IOR;
 				ray.Direction = glm::refract(inDir, reflectNormal, refractionRatio);
 			}
 			else
 			{
-				// move in a bit out case of dropping inside the sphere
 				ray.Origin = payload.HitPosition + payload.HitNormal * 0.0001f;
-				float refractionRatio = ir;
-				//ray.Direction = Utils::RefractedDirection(ray.Direction, -reflectNormal, refractionRatio);
+				float refractionRatio = IOR;
 				ray.Direction = glm::refract(inDir, -reflectNormal, refractionRatio);
 			}
 			multiplier *= material.Metallic * (1.0f - material.Opacity);
@@ -197,12 +194,7 @@ glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 		else
 		{
 			multiplier *= 0.35f * material.Metallic;
-			// move out a bit in case of dropping inside the sphere
 			ray.Origin = payload.HitPosition + payload.HitNormal * 0.0001f;
-			// to calculate reflectRay based on originRay and normal(must be normalized),
-			// just filp the ray base at the normal direction in the distance of 2*|originRay|*cos¦È
-			// reflectRay = originRay - 2 * (originRay * normal) * normal
-			// ray.Direction = ray.Direction - 2 * glm::dot(ray.Direction, payload.HitNormal) * payload.HitNormal;
 			ray.Direction = glm::reflect(ray.Direction, reflectNormal);
 		}
 	}

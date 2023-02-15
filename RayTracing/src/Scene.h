@@ -1,27 +1,15 @@
 #pragma once
 
-#include <glm/glm.hpp>
-
 #include <vector>
 
-struct Material
-{
-	glm::vec3 Albedo{ 1.0f };
-	float Roughness = 1.0f;
-	float Metallic = 1.0f;
-	float Opacity = 1.0f;
-};
+#include "Geometry.h"
+#include "Material.h"
 
-struct Sphere
+class Scene
 {
-	glm::vec3 Origin{ 0.0f };
-	float Radius = 0.5f;
+public:
+	Scene();
 
-	int MaterialIndex = 0;
-};
-
-struct Scene
-{
 	std::vector<Sphere> Spheres;
 	std::vector<Material> Materials;
 };

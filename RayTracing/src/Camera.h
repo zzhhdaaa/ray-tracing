@@ -39,10 +39,9 @@ private:
 	glm::vec3 m_Position{ 0.0f, 0.0f, 0.0f };
 	glm::vec3 m_ForwardDirection{ 0.0f, 0.0f, 0.0f };
 
+	glm::vec2 m_LastMousePosition{ 0.0f, 0.0f };
+	uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
+
 	// Cached ray directions
 	std::vector<glm::vec3> m_RayDirections;
-
-	glm::vec2 m_LastMousePosition{ 0.0f, 0.0f };
-
-	uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 };
