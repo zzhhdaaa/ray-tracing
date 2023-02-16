@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include "Walnut/Random.h"
+
 #include "Geometry.h"
 #include "Material.h"
 

@@ -27,31 +27,11 @@ public:
 	void ResetAccumulationFrame() { m_AccumulationFrame = 1; }
 	Settings& GetSettings() { return m_Settings; }
 private:
-	struct QuadraticResult
-	{
-		float Discriminant;
-		float T[2];
-		bool IsFrontFace;
-	};
-
-	struct HitPayload
-	{
-		float HitDistance = 0.0f;
-		glm::vec3 HitPosition;
-		glm::vec3 HitNormal;
-
-		int ObjectIndex = 0;
-		bool HitRefracted = false;
-		bool IsFrontFace = true;
-	};
-
 	glm::vec4 RayGenPerPixel(uint32_t x, uint32_t y);
 
 	HitPayload TraceRay(const Ray& ray);
-	HitPayload ClosestHit(const Ray& ray, const QuadraticResult& closestResult, int closestObjectIndex);
-	HitPayload MissHit(const Ray& ray);
-
-	QuadraticResult SolveQuadratic(const Ray& ray, const Sphere& sphere);
+	HitPayload ClosestHit(const Ray& ray, HitPayload& hitPayload);
+	HitPayload MissHit(const HitPayload& hitPayload);
 private:
 	std::shared_ptr<Walnut::Image> m_FinalImage;
 	Settings m_Settings;
