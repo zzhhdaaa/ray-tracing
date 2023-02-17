@@ -152,6 +152,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ClCompile Include="src\Scene.cpp" />
+    <ClCompile Include="src\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Walnut\Walnut\Walnut.vcxproj">
@@ -165,10 +166,12 @@
     <ClInclude Include="src\other\core\transform.h" />
     <ClInclude Include="src\Geometry.h" />
     <ClInclude Include="src\Material.h" />
+    <ClInclude Include="src\other\external\stb_image.h" />
     <ClInclude Include="src\Ray.h" />
     <ClInclude Include="src\Renderer.h" />
     <ClInclude Include="src\RendererUI.h" />
     <ClInclude Include="src\Scene.h" />
+    <ClInclude Include="src\Texture.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

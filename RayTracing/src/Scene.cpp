@@ -4,22 +4,33 @@ Scene::Scene()
 {
 	Material& redSphere = Materials.emplace_back();
 	redSphere.Albedo = glm::vec3(1.0f, 0.4f, 0.4f);
-	redSphere.Roughness = 0.5f;
-	redSphere.Opacity = 0.3f;
+	redSphere.Roughness = 0.0f;
+	redSphere.Opacity = 1.0f;
+	redSphere.Texture = std::make_shared<SolidColor>(1.0f, 0.4f, 0.4f);
+	//redSphere.Texture.SetColor(1.0f, 0.4f, 0.4f);
 
 	Material& greenSphere = Materials.emplace_back();
 	greenSphere.Albedo = glm::vec3(0.4f, 1.0f, 0.4f);
 	greenSphere.Roughness = 0.2f;
 	greenSphere.Opacity = 0.0f;
+	greenSphere.Texture = std::make_shared<SolidColor>(0.4f, 1.0f, 0.4f);
+	//greenSphere.Texture.SetColor(0.4f, 1.0f, 0.4f);
 
 	Material& blueSphere = Materials.emplace_back();
 	blueSphere.Albedo = glm::vec3(0.4f, 0.4f, 1.0f);
-	blueSphere.Roughness = 0.05f;
+	blueSphere.Roughness = 0.5f;
 	blueSphere.Opacity = 1.0f;
+	//blueSphere.Texture = std::make_shared<CheckerTexture>(glm::vec3(0.4f, 0.4f, 1.0f), glm::vec3(1.0f, 0.4f, 0.4f));
+	blueSphere.Texture = std::make_shared<ImageTexture>("img/earthmap.jpg");
+	//blueSphere.Texture = std::make_shared<SolidColor>(0.4f, 0.4f, 1.0f);
+	//blueSphere.Texture.SetColor(0.4f, 0.4f, 1.0f);
 
 	Material& graySphere = Materials.emplace_back();
 	graySphere.Albedo = glm::vec3(0.9f, 0.9f, 0.9f);
 	graySphere.Roughness = 0.15f;
+	graySphere.Texture = std::make_shared<CheckerTexture>(glm::vec3(0.4f, 0.4f, 1.0f), glm::vec3(1.0f, 0.4f, 0.4f));
+	//graySphere.Texture = std::make_shared<SolidColor>(0.9f, 0.9f, 0.9f);
+	//graySphere.Texture.SetColor(0.9f, 0.9f, 0.9f);
 
 	{
 		Sphere sphere;

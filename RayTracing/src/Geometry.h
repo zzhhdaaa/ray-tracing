@@ -13,7 +13,7 @@ class Geometry
 {
 public:
 	int MaterialIndex = 0;
-	virtual bool GetBoundingBox(BoundingBox& outputBox) const = 0;
+	//virtual bool GetBoundingBox(BoundingBox& outputBox) const = 0;
 };
 
 class Sphere : public Geometry
@@ -24,10 +24,10 @@ public:
 	glm::vec3 Origin;
 	float Radius;
 
-	virtual bool GetBoundingBox(BoundingBox& outputBox) const override;
+	//virtual bool GetBoundingBox(BoundingBox& outputBox) const override;
 };
 
-class GeometryList : public Geometry
-{
-	virtual bool GetBoundingBox(BoundingBox& outputBox) const override;
-};
+//class GeometryList : public Geometry
+//{
+//	virtual bool GetBoundingBox(BoundingBox& outputBox) const override;
+//};

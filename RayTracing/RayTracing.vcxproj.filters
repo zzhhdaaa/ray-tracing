@@ -31,6 +31,7 @@
     <ClCompile Include="src\other\core\transform.cpp">
       <Filter>src\other\core</Filter>
     </ClCompile>
+    <ClCompile Include="src\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Camera.h">
@@ -63,6 +64,8 @@
     <ClInclude Include="src\other\core\transform.h">
       <Filter>src\other\core</Filter>
     </ClInclude>
+    <ClInclude Include="src\Texture.h" />
+    <ClInclude Include="src\other\external\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

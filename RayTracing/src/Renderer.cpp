@@ -1,10 +1,7 @@
 #include "Renderer.h"
 
-#include "Walnut/Random.h"
-
 #include <execution>
 
-#define PI 3.14159265
 #define MultiThread 1
 
 namespace Utils
@@ -152,7 +149,7 @@ glm::vec4 Renderer::RayGenPerPixel(uint32_t x, uint32_t y)
 		// sphere & material
 		const Sphere& sphere = m_ActiveScene->Spheres[hitPayload.ObjectIndex];
 		const Material& material = m_ActiveScene->Materials[sphere.MaterialIndex];
-		glm::vec3 sphereColor = material.Albedo * lightMultiplier;
+		glm::vec3 sphereColor = material.Texture->GetColor(hitPayload.HitUV, hitPayload.HitPosition) * lightMultiplier;
 
 		// add into color
 		color += sphereColor * multiplier * std::sqrt(material.Opacity);
@@ -201,7 +198,7 @@ HitPayload Renderer::TraceRay(const Ray& ray)
 	// calculating if the ray intersects with the spheres
 	for (size_t i = 0; i < m_ActiveScene->Spheres.size(); i++)
 	{
-		HitPayload hitPayload = Hit(ray, m_ActiveScene->Spheres[i]);
+		HitPayload hitPayload = RayMath::Hit(ray, m_ActiveScene->Spheres[i]);
 
 		// if intersects and showing in the front
 		if (hitPayload.IsHit && hitPayload.HitDistance < closestDistance)
@@ -225,18 +222,9 @@ HitPayload Renderer::TraceRay(const Ray& ray)
 HitPayload Renderer::ClosestHit(const Ray& ray, HitPayload& hitPayload)
 {
 	const Sphere& closestSphere = m_ActiveScene->Spheres[hitPayload.ObjectIndex];
+	const float& opacity = m_ActiveScene->Materials[closestSphere.MaterialIndex].Opacity;
 
-	hitPayload.HitPosition = ray.Origin + ray.Direction * hitPayload.HitDistance;
-	hitPayload.HitNormal = glm::normalize(hitPayload.HitPosition - closestSphere.Origin);
-
-	if (std::abs(Walnut::Random::Float()) > m_ActiveScene->Materials[closestSphere.MaterialIndex].Opacity)
-	{
-		hitPayload.HitRefracted = true;
-	}
-	else
-	{
-		hitPayload.HitRefracted = false;
-	}
+	RayMath::PayloadCompute(hitPayload, ray, closestSphere, opacity);
 
 	return hitPayload;
 }
