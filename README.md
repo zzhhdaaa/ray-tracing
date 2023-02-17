@@ -15,7 +15,8 @@ For reference, I am following the book series ***Ray Tracing in One Weekend, The
 Although called "from scratch", I use an app template from `TheCherno/WalnutAppTemplate.git` to help me handle GUI and visualize the render output interactively. This helps me get rid of things that are not so important at this point and focus on the core parts. 
 
 ## Current Stage
-Implementing very basic refraction. 
+
+### Implementing very basic refraction. 
 
 - Add Opacity in the Material class, as a random scaler to decide whether the ray should reflect or refract
 - Use incident direction, normal, and index of refraction(IOR) to calculate the refracted direction
@@ -25,4 +26,15 @@ Implementing very basic refraction.
 The glass spheres still look odd when compared to a real-world one. 
 
 https://user-images.githubusercontent.com/91817338/218551512-f9477720-35ac-44d9-9295-d0570a9c7aa4.mp4
+### The material-texture system. 
+
+- Implement the Texture base class, and several child classes
+- Implement the uv calculation when hit occurs
+- Refactor the Material class and Renderer class to accept different textures
+- Render an Earth sphere
+
+
+https://user-images.githubusercontent.com/91817338/219780940-f932d54a-5c4b-4a1e-9d70-99676250338b.mp4
+
+
 
