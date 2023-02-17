@@ -1,13 +1,42 @@
 #include "Ray.h"
 
-HitPayload Ray::Hit(const Sphere& sphere) const
+bool Hit(const Ray& ray, const BoundingBox& box)
+{
+	float t_min = 0.0f;
+	float t_max = FLT_MAX;
+
+	for (int i = 0; i < 3; i++)
+	{
+		float inD = 1.0f / ray.Direction[i];
+		float t0;
+		float t1;
+		if (inD >= 0.0f)
+		{
+			t0 = (box.MinPos[i] - ray.Origin[i]) * inD;
+			t1 = (box.MaxPos[i] - ray.Origin[i]) * inD;
+		}
+		else
+		{
+			t0 = (box.MaxPos[i] - ray.Origin[i]) * inD;
+			t1 = (box.MinPos[i] - ray.Origin[i]) * inD;
+		}
+
+		t_min = t0 > t_min ? t0 : t_min;
+		t_max = t1 < t_max ? t1 : t_max;
+		if (t_max <= t_min)
+			return false;
+	}
+	return true;
+}
+
+HitPayload Hit(const Ray& ray, const Sphere& sphere)
 {
 	HitPayload hitPayload;
 
 	// calculating if the camera ray intersects with the sphere
-	float a = glm::dot(Direction, Direction);
-	float b = 2.0f * (glm::dot(Origin, Direction) - glm::dot(Direction, sphere.Origin));
-	float c = glm::dot(Origin, Origin) + glm::dot(sphere.Origin, sphere.Origin) - 2.0f * glm::dot(Origin, sphere.Origin) - sphere.Radius * sphere.Radius;
+	float a = glm::dot(ray.Direction, ray.Direction);
+	float b = 2.0f * (glm::dot(ray.Origin, ray.Direction) - glm::dot(ray.Direction, sphere.Origin));
+	float c = glm::dot(ray.Origin, ray.Origin) + glm::dot(sphere.Origin, sphere.Origin) - 2.0f * glm::dot(ray.Origin, sphere.Origin) - sphere.Radius * sphere.Radius;
 
 	float discriminant = b * b - 4.0f * a * c;
 

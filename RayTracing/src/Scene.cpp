@@ -50,24 +50,24 @@ Scene::Scene()
 		Spheres.push_back(sphere);
 	}
 
-	for (int i = 0; i < 12; i++)
-	{
-		Material material;
-		material.Albedo = Walnut::Random::Vec3();
-		material.Roughness = Walnut::Random::Float();
-		material.Opacity = Walnut::Random::Float();
-		Materials.push_back(material);
-	}
+	//for (int i = 0; i < 12; i++)
+	//{
+	//	Material material;
+	//	material.Albedo = Walnut::Random::Vec3();
+	//	material.Roughness = Walnut::Random::Float();
+	//	material.Opacity = Walnut::Random::Float();
+	//	Materials.push_back(material);
+	//}
 
-	for (int i = 0; i < 24; i++)
-	{
-		Sphere sphere;
-		float x = Walnut::Random::Float(-4.0f, 4.0f);
-		float y = -0.8f;
-		float z = Walnut::Random::Float(-6.0f, 2.0f);
-		sphere.Origin = { x, y, z };
-		sphere.Radius = Walnut::Random::Float(0.1f, 0.2f);
-		sphere.MaterialIndex = (int)Walnut::Random::UInt(0, Materials.size());
-		Spheres.push_back(sphere);
-	}
+	//for (int i = 0; i < 24; i++)
+	//{
+	//	Sphere sphere;
+	//	float x = Walnut::Random::Float(-4.0f, 4.0f);
+	//	float y = -0.8f;
+	//	float z = Walnut::Random::Float(-6.0f, 2.0f);
+	//	sphere.Origin = { x, y, z };
+	//	sphere.Radius = Walnut::Random::Float(0.1f, 0.2f);
+	//	sphere.MaterialIndex = (int)Walnut::Random::UInt(0, Materials.size());
+	//	Spheres.push_back(sphere);
+	//}
 }

@@ -19,13 +19,14 @@ struct HitPayload
 	glm::vec3 HitNormal = glm::vec3(1, 0, 0);
 };
 
-class Ray
+struct Ray
 {
-public:
 	Ray() : Origin(glm::vec3(0, 0, 0)), Direction(glm::vec3(1, 0, 0)) {}
 	Ray(glm::vec3 origin, glm::vec3 direction) : Origin(origin), Direction(direction) {}
 	glm::vec3 Origin;
 	glm::vec3 Direction;
-public:
-	HitPayload Hit(const Sphere& sphere) const;
 };
+
+bool Hit(const Ray& ray, const BoundingBox& box);
+HitPayload Hit(const Ray& ray, const Geometry& geometry);
+HitPayload Hit(const Ray& ray, const Sphere& sphere);

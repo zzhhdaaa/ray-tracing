@@ -9,7 +9,6 @@
 
 namespace Utils
 {
-
 	static uint32_t ConvertToRGBA(const glm::vec4& color)
 	{
 		uint8_t r = (uint8_t)(color.r * 255.0f);
@@ -20,7 +19,6 @@ namespace Utils
 		return 0x00000000 | a << 24 | b << 16 | g << 8 | r;
 	}
 
-
 	static glm::vec3 RandomUnitVec3()
 	{
 		while (true)
@@ -30,18 +28,6 @@ namespace Utils
 				continue;
 			return glm::normalize(v);
 		}
-	}
-
-	static glm::vec3 RefractedDirection(const glm::vec3& inDir, const glm::vec3& hitNor, float eta)
-	{
-		float cosThetaI = glm::dot(hitNor, inDir);
-		float sin2ThetaI = std::max(0.0f, (float)(1 - cosThetaI * cosThetaI));
-		float sin2ThetaT = eta * eta * sin2ThetaI;
-
-		//if (sin2ThetaT >= 1) return incident;
-		float cosThetaT = std::sqrt(1 - sin2ThetaT);
-		glm::vec3 outDir = eta * (-inDir) + (eta * cosThetaI - cosThetaT) * hitNor;
-		return outDir;
 	}
 }
 
@@ -215,7 +201,7 @@ HitPayload Renderer::TraceRay(const Ray& ray)
 	// calculating if the ray intersects with the spheres
 	for (size_t i = 0; i < m_ActiveScene->Spheres.size(); i++)
 	{
-		HitPayload hitPayload = ray.Hit(m_ActiveScene->Spheres[i]);
+		HitPayload hitPayload = Hit(ray, m_ActiveScene->Spheres[i]);
 
 		// if intersects and showing in the front
 		if (hitPayload.IsHit && hitPayload.HitDistance < closestDistance)

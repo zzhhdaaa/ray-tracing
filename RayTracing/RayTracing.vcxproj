@@ -138,8 +138,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\other\geometry.cpp" />
-    <ClCompile Include="src\other\transform.cpp" />
+    <ClCompile Include="src\other\core\geometry.cpp" />
+    <ClCompile Include="src\other\core\transform.cpp" />
     <ClCompile Include="src\Geometry.cpp" />
     <ClCompile Include="src\RendererUI.cpp" />
     <ClCompile Include="src\Camera.cpp" />
@@ -160,9 +160,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Camera.h" />
-    <ClInclude Include="src\other\geometry.h" />
-    <ClInclude Include="src\other\pbrt.h" />
-    <ClInclude Include="src\other\transform.h" />
+    <ClInclude Include="src\other\core\geometry.h" />
+    <ClInclude Include="src\other\core\pbrt.h" />
+    <ClInclude Include="src\other\core\transform.h" />
     <ClInclude Include="src\Geometry.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Ray.h" />
