@@ -25,12 +25,6 @@
     <ClCompile Include="src\Scene.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\other\core\geometry.cpp">
-      <Filter>src\other\core</Filter>
-    </ClCompile>
-    <ClCompile Include="src\other\core\transform.cpp">
-      <Filter>src\other\core</Filter>
-    </ClCompile>
     <ClCompile Include="src\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -54,15 +48,6 @@
     </ClInclude>
     <ClInclude Include="src\Scene.h">
       <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\other\core\geometry.h">
-      <Filter>src\other\core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\other\core\pbrt.h">
-      <Filter>src\other\core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\other\core\transform.h">
-      <Filter>src\other\core</Filter>
     </ClInclude>
     <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\other\external\stb_image.h" />

@@ -96,7 +96,7 @@ public:
     {
         // If we have no texture data, then return solid cyan as a debugging aid.
         if (data == nullptr)
-            return glm::vec3(0, 1, 1);
+            return glm::vec3(1, 0, 1);
 
         // Clamp input texture coordinates to [0,1] x [1,0]
         //uv = glm::clamp(uv, glm::vec2(0.0f), glm::vec2(1.0f));

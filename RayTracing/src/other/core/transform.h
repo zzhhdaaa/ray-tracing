@@ -5,6 +5,72 @@
 template <typename T> class Vector2
 {
 public:
+	// Vector2 Public Methods
+	T operator[](int i) const
+	{
+		assert(i >= 0 && i <= 1);
+		if (i == 0) return x;
+		return y;
+	}
+	T& operator[](int i)
+	{
+		assert(i >= 0 && i <= 1);
+		if (i == 0) return x;
+		return y;
+	}
+
+	Vector2() { x = y = 0; }
+	Vector2(T x, T y)
+		: x(x), y(y)
+	{
+		assert(!HasNaNs());
+	}
+	bool HasNaNs() const
+	{
+		return std::isnan(x) || std::isnan(y);
+	}
+
+	Vector2<T> operator+(const Vector2<T>& v) const { return Vector2(x + v.x, y + v.y); }
+	Vector2<T>& operator+=(const Vector2<T>& v)
+	{
+		x += v.x; y += v.y;
+		return *this;
+	}
+
+	Vector2<T> operator-(const Vector2<T>& v) const { return Vector2(x - v.x, y - v.y); }
+	Vector2<T>& operator-=(const Vector2<T>& v)
+	{
+		x -= v.x; y -= v.y;
+		return *this;
+	}
+
+	Vector2<T> operator*(T s) const { return Vector2<T>(s * x, s * y); }
+	Vector2<T>& operator*=(T s)
+	{
+		x *= s; y *= s;
+		return *this;
+	}
+
+	Vector2<T> operator/(T f) const
+	{
+		assert(f != 0);
+		Float inv = (Float)1 / f;
+		return Vector2<T>(x * inv, y * inv);
+	}
+	Vector2<T>& operator/=(T f)
+	{
+		assert(f != 0);
+		Float inv = (Float)1 / f;
+		x *= inv; y *= inv;
+		return *this;
+	}
+
+	Vector2<T> operator-() const { return Vector2<T>(-x, -y); }
+
+	Float LengthSquared() const { return x * x + y * y; }
+	Float Length() const { return std::sqrt(LengthSquared()); }
+
+	// Vector2 Public Data
 	T x, y;
 };
 
@@ -82,7 +148,6 @@ public:
 	T x, y, z;
 };
 
-
 // Geometry Inline Functions
 template <typename T> inline Vector3<T> operator*(T s, const Vector3<T>& v) { return v * s; }
 template <typename T> Vector3<T> Abs(const Vector3<T>& v)
@@ -144,3 +209,29 @@ typedef Vector2<Float> Vector2f;
 typedef Vector2<int> Vector2i;
 typedef Vector3<Float> Vector3f;
 typedef Vector3<int> Vector3i;
+
+template <typename T> class Point2
+{
+public:
+	// Point2 Public Methods
+	// Point2 Public Data
+	T x, y;
+};
+
+template <typename T> class Point3
+{
+public:
+	// Point3 Public Methods
+	Point3() { x = y = z = 0; }
+	Point3(T x, T y, T z) : x(x), y(y), z(z)
+	{
+		assert(!HasNaNs());
+	}
+	// Point3 Public Data
+	T x, y, z;
+};
+
+typedef Point2<Float> Point2f;
+typedef Point2<int> Point2i;
+typedef Point3<Float> Point3f;
+typedef Point3<int> Point3i;
